@@ -16,6 +16,11 @@
 | **Public repo** | `BillM9000/hopper-ops-portfolio` (remote: `public`) |
 | **Database** | `hopper_ops` on VPS PostgreSQL, user `hopperops` |
 | **Version** | v0.1.0 |
+| **Linear** | [Hopper Ops project](https://linear.app/gracezero/project/hopper-ops-a45e34869c97) |
+| **Notion** | [App Index > Hopper Ops](https://www.notion.so/3398fcb10b0c81b183b5c06bce2fee10) |
+| **Notion Runbooks** | [Engineering > Runbooks](https://www.notion.so/3378fcb10b0c81c99b6ada39c58f0d32) |
+| **n8n Guide** | [Runbooks > n8n Environment Guide](https://www.notion.so/3398fcb10b0c8116969cf018faac5d58) |
+| **Doc Standards** | [Engineering > Documentation Standards](https://www.notion.so/3398fcb10b0c81c8bbd9d68f970b6a32) |
 
 ---
 
