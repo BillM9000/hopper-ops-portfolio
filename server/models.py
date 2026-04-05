@@ -1,8 +1,8 @@
 """Hopper Ops — Pydantic models"""
 
 from datetime import datetime, date
-from typing import Optional, Any
-from pydantic import BaseModel
+from typing import Optional, Any, Literal
+from pydantic import BaseModel, field_validator
 
 
 class ModuleResult(BaseModel):
@@ -48,9 +48,16 @@ class RiskItemOut(BaseModel):
 
 
 class RiskUpdate(BaseModel):
-    status: Optional[str] = None
-    risk_level: Optional[str] = None
+    status: Optional[Literal["open", "mitigated", "resolved", "accepted"]] = None
+    risk_level: Optional[Literal["red", "yellow", "green"]] = None
     notes: Optional[str] = None
+
+    @field_validator("notes")
+    @classmethod
+    def notes_max_length(cls, v):
+        if v and len(v) > 2000:
+            raise ValueError("notes must be 2000 characters or fewer")
+        return v
 
 
 class ActionItemOut(BaseModel):
@@ -68,8 +75,8 @@ class ActionItemOut(BaseModel):
 
 
 class ActionUpdate(BaseModel):
-    status: Optional[str] = None
-    priority: Optional[str] = None
+    status: Optional[Literal["open", "in_progress", "done", "dismissed"]] = None
+    priority: Optional[Literal["critical", "high", "medium", "low"]] = None
 
 
 class FeedEntryOut(BaseModel):

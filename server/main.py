@@ -13,6 +13,7 @@ from starlette.middleware.sessions import SessionMiddleware
 
 from server.config import SESSION_SECRET, STATIC_DIR, APP_PORT
 from server.database import init_db, close_db
+from server.middleware import CSRFMiddleware, RateLimitMiddleware, SecurityHeadersMiddleware
 from server.routes.status import router as status_router
 from server.routes.sbom import router as sbom_router
 from server.routes.risks import router as risks_router
@@ -58,8 +59,16 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# Middleware
-app.add_middleware(SessionMiddleware, secret_key=SESSION_SECRET)
+# Middleware (order matters: last added = first executed)
+# 1. Security headers on every response
+app.add_middleware(SecurityHeadersMiddleware)
+# 2. CSRF double-submit cookie check on state-changing requests
+app.add_middleware(CSRFMiddleware)
+# 3. Rate limiting per-IP
+app.add_middleware(RateLimitMiddleware)
+# 4. Session (7-day expiry, HTTPS-only in prod)
+app.add_middleware(SessionMiddleware, secret_key=SESSION_SECRET, max_age=7 * 24 * 60 * 60)
+# 5. CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:5173", "https://hopperops.gracezero.ai"],
