@@ -1,9 +1,17 @@
 """Module: Claude Code releases from GitHub atom feed"""
 
+import re
 import httpx
 import xml.etree.ElementTree as ET
 from server.modules.base import BaseModule
 from server.models import ModuleResult
+
+
+def strip_html(text: str) -> str:
+    """Remove HTML tags and collapse whitespace."""
+    text = re.sub(r"<[^>]+>", " ", text)
+    text = re.sub(r"\s+", " ", text).strip()
+    return text
 
 RELEASES_URL = "https://github.com/anthropics/claude-code/releases.atom"
 ATOM_NS = "{http://www.w3.org/2005/Atom}"
@@ -27,7 +35,8 @@ class ClaudeCodeReleasesModule(BaseModule):
             link_el = entry.find(f"{ATOM_NS}link")
             link = link_el.get("href", "") if link_el is not None else ""
             updated = entry.findtext(f"{ATOM_NS}updated", "")
-            content = entry.findtext(f"{ATOM_NS}content", "")
+            content_raw = entry.findtext(f"{ATOM_NS}content", "")
+            content = strip_html(content_raw)
 
             # Truncate content for storage
             if len(content) > 500:

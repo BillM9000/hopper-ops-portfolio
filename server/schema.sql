@@ -65,7 +65,8 @@ CREATE TABLE IF NOT EXISTS feed_entries (
   body TEXT,
   source_url VARCHAR(500),
   published_at TIMESTAMPTZ,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE(module_name, title)
 );
 
 CREATE TABLE IF NOT EXISTS sbom_snapshots (

@@ -19,6 +19,19 @@ async def init_db():
     async with pool.acquire() as conn:
         await conn.execute(schema_sql)
 
+        # Migration: deduplicate feed_entries and add unique constraint
+        try:
+            await conn.execute("""
+                DELETE FROM feed_entries a USING feed_entries b
+                WHERE a.id > b.id AND a.module_name = b.module_name AND a.title = b.title
+            """)
+            await conn.execute("""
+                ALTER TABLE feed_entries ADD CONSTRAINT feed_entries_module_title_key
+                UNIQUE (module_name, title)
+            """)
+        except Exception:
+            pass  # Constraint already exists
+
 
 async def close_db():
     """Close connection pool."""
