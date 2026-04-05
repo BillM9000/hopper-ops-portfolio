@@ -16,12 +16,12 @@ export default function SBOM() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
         <div>
           <h1 className="text-xl font-bold">Software Bill of Materials</h1>
           <p className="text-xs text-ho-muted mt-0.5">{components.length} components tracked</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           <button
             onClick={() => setFilter("")}
             className={`ho-btn-ghost text-xs ${filter === "" ? "bg-ho-card text-ho-text" : ""}`}
@@ -40,8 +40,8 @@ export default function SBOM() {
         </div>
       </div>
 
-      <div className="ho-card overflow-hidden p-0">
-        <table className="w-full">
+      <div className="ho-card overflow-hidden p-0 overflow-x-auto">
+        <table className="w-full min-w-[700px]">
           <thead>
             <tr className="border-b border-ho-border text-[10px] text-ho-muted uppercase tracking-wider">
               <th className="px-4 py-3 text-left font-semibold">Component</th>

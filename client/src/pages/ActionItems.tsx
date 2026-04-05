@@ -22,9 +22,9 @@ export default function ActionItems() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
         <h1 className="text-xl font-bold">Action Items</h1>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           {["open", "in_progress", "done", "dismissed", ""].map((s) => (
             <button
               key={s}

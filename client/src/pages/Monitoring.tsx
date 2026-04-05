@@ -23,14 +23,14 @@ export default function Monitoring() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
         <h1 className="text-xl font-bold">Monitoring</h1>
         <RefreshButton onClick={load} loading={loading} />
       </div>
 
       {/* Status summary cards */}
       {data && (
-        <div className="grid grid-cols-3 gap-4 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4 mb-6">
           <div className="ho-card flex items-center gap-3">
             <Wifi size={20} className="text-ho-accent-light" />
             <div>

@@ -59,7 +59,7 @@ export default function Dashboard() {
       </div>
 
       {/* Status cards */}
-      <div className="grid grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-6">
         <div className="ho-card flex items-center gap-3 hover:border-ho-accent transition-colors">
           <div className="p-2 rounded-lg bg-ho-accent/10">
             <Shield size={20} className="text-ho-accent-light" />
@@ -113,9 +113,9 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Action Items */}
-        <div className="col-span-1 ho-card">
+        <div className="ho-card">
           <h2 className="text-sm font-semibold mb-3 flex items-center gap-2">
             <CheckSquare size={14} />
             Top Actions
@@ -131,7 +131,7 @@ export default function Dashboard() {
         </div>
 
         {/* Feed */}
-        <div className="col-span-1 ho-card">
+        <div className="ho-card">
           <h2 className="text-sm font-semibold mb-3 flex items-center gap-2">
             <Clock size={14} />
             Recent Updates
@@ -147,7 +147,7 @@ export default function Dashboard() {
         </div>
 
         {/* Module Status */}
-        <div className="col-span-1 ho-card">
+        <div className="ho-card">
           <h2 className="text-sm font-semibold mb-3 flex items-center gap-2">
             <Activity size={14} />
             Modules
