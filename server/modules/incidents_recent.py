@@ -5,7 +5,7 @@ from datetime import datetime, timezone, timedelta
 from server.modules.base import BaseModule
 from server.models import ModuleResult
 
-INCIDENTS_URL = "https://status.anthropic.com/api/v2/incidents.json"
+INCIDENTS_URL = "https://status.claude.com/api/v2/incidents.json"
 
 
 class IncidentsRecentModule(BaseModule):

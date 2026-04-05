@@ -69,6 +69,16 @@ async def store_result(result: ModuleResult):
 
     # Store feed entries from action items
     for item in result.action_items:
+        published = item.get("published_at")
+        if isinstance(published, str):
+            try:
+                from datetime import datetime as dt
+                published = dt.fromisoformat(published.replace("Z", "+00:00"))
+            except (ValueError, TypeError):
+                published = result.ran_at
+        elif published is None:
+            published = result.ran_at
+
         await db.execute(
             """INSERT INTO feed_entries (module_name, entry_type, title, body, source_url, published_at)
                VALUES ($1, $2, $3, $4, $5, $6)
@@ -78,7 +88,7 @@ async def store_result(result: ModuleResult):
             item.get("title", ""),
             item.get("body", ""),
             item.get("source_url"),
-            item.get("published_at", result.ran_at),
+            published,
         )
 
 

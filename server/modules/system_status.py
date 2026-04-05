@@ -4,7 +4,7 @@ import httpx
 from server.modules.base import BaseModule
 from server.models import ModuleResult
 
-STATUS_URL = "https://status.anthropic.com/api/v2/summary.json"
+STATUS_URL = "https://status.claude.com/api/v2/summary.json"
 
 
 class SystemStatusModule(BaseModule):
