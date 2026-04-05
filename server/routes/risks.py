@@ -19,17 +19,17 @@ async def get_risks(
     idx = 1
 
     if risk_level:
-        where_clauses.append(f"risk_level = ${idx}")
+        where_clauses.append(f"r.risk_level = ${idx}")
         params.append(risk_level)
         idx += 1
 
     if category:
-        where_clauses.append(f"category = ${idx}")
+        where_clauses.append(f"r.category = ${idx}")
         params.append(category)
         idx += 1
 
     if status:
-        where_clauses.append(f"status = ${idx}")
+        where_clauses.append(f"r.status = ${idx}")
         params.append(status)
         idx += 1
 
@@ -43,8 +43,8 @@ async def get_risks(
             LEFT JOIN components c ON r.component_id = c.id
             {where}
             ORDER BY
-              CASE risk_level WHEN 'red' THEN 1 WHEN 'yellow' THEN 2 ELSE 3 END,
-              deadline ASC NULLS LAST""",
+              CASE r.risk_level WHEN 'red' THEN 1 WHEN 'yellow' THEN 2 ELSE 3 END,
+              r.deadline ASC NULLS LAST""",
         *params,
     )
 
