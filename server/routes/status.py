@@ -39,8 +39,16 @@ async def get_status():
            FROM module_runs ORDER BY module_name, ran_at DESC"""
     )
 
+    import json
+    anthropic_data = latest_status["result_data"] if latest_status else {}
+    if isinstance(anthropic_data, str):
+        try:
+            anthropic_data = json.loads(anthropic_data)
+        except (json.JSONDecodeError, TypeError):
+            pass
+
     return {
-        "anthropic_status": latest_status["result_data"] if latest_status else {},
+        "anthropic_status": anthropic_data,
         "risk_summary": {r["risk_level"]: r["count"] for r in risk_summary},
         "action_summary": {a["status"]: a["count"] for a in action_summary},
         "last_refresh": last_refresh,
