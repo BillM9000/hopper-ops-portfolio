@@ -81,12 +81,8 @@ Entries:
         )
 
         response_text = message.content[0].text
-        try:
-            data = json.loads(response_text)
-        except json.JSONDecodeError:
-            import re
-            match = re.search(r"\{.*\}", response_text, re.DOTALL)
-            data = json.loads(match.group()) if match else {"finds": [], "brief": "Could not parse."}
+        from server.modules.llm_utils import parse_llm_json
+        data = parse_llm_json(response_text, "brief")
 
         feed_items = []
         for find in data.get("finds", [])[:5]:

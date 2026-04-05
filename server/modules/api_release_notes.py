@@ -52,18 +52,10 @@ Release notes content:
         )
 
         response_text = message.content[0].text
-        import json
-        try:
-            data = json.loads(response_text)
-        except json.JSONDecodeError:
-            # Try to extract JSON from the response
-            match = re.search(r"\{.*\}", response_text, re.DOTALL)
-            if match:
-                data = json.loads(match.group())
-            else:
-                data = {"changes": [], "brief": response_text[:500]}
+        from server.modules.llm_utils import parse_llm_json, extract_brief
+        data = parse_llm_json(response_text, "brief")
 
-        brief = data.get("brief", "No API changes summarized.")
+        brief = extract_brief(data, "No API changes summarized.")
         feed_items = []
         for change in data.get("changes", [])[:3]:
             feed_items.append({

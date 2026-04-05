@@ -58,12 +58,8 @@ Current state:
         )
 
         response_text = message.content[0].text
-        try:
-            data = json.loads(response_text)
-        except json.JSONDecodeError:
-            import re
-            match = re.search(r"\{.*\}", response_text, re.DOTALL)
-            data = json.loads(match.group()) if match else {"synthesized_actions": [], "brief": response_text[:500]}
+        from server.modules.llm_utils import parse_llm_json, extract_brief
+        data = parse_llm_json(response_text, "brief")
 
         # Upsert synthesized action items
         for action in data.get("synthesized_actions", []):
@@ -79,5 +75,5 @@ Current state:
         return self._result(
             success=True,
             data=data,
-            brief_text=data.get("brief", "No synthesis available."),
+            brief_text=extract_brief(data, "No synthesis available."),
         )
