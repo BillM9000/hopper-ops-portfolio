@@ -1,7 +1,7 @@
 // @ts-check
 import { test, expect } from "@playwright/test";
 
-const BASE_URL = process.env.TEST_URL || "https://hopperops.gracezero.ai";
+const BASE_URL = process.env.TEST_URL || "https://your-domain.example.com";
 
 // --- Unauthenticated tests (no login required) ---
 

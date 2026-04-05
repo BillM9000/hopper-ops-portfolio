@@ -8,7 +8,7 @@ export default defineConfig({
   retries: 0,
   reporter: [["list"]],
   use: {
-    baseURL: process.env.TEST_URL || "https://hopperops.gracezero.ai",
+    baseURL: process.env.TEST_URL || "https://your-domain.example.com",
     ignoreHTTPSErrors: true,
   },
 });

@@ -6,25 +6,23 @@ services:
     ports:
       - "127.0.0.1:3616:3616"
     environment:
-      - DATABASE_URL=postgresql://hopperops:${DB_PASSWORD}@172.18.0.1:5432/hopper_ops
+      - DATABASE_URL=postgresql://hopperops:${DB_PASSWORD}@db:5432/hopper_ops
       - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
       - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
-      - GOOGLE_CALLBACK_URL=https://hopperops.gracezero.ai/auth/google/callback
-      - APP_URL=https://hopperops.gracezero.ai
+      - GOOGLE_CALLBACK_URL=https://your-domain.example.com/auth/google/callback
+      - APP_URL=https://your-domain.example.com
       - APP_PORT=3616
-      - ADMIN_EMAIL=billm9000@gmail.com
+      - ADMIN_EMAIL=${ADMIN_EMAIL}
       - SESSION_SECRET=${SESSION_SECRET}
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
       - UPTIMEROBOT_API_KEY=${UPTIMEROBOT_API_KEY}
       - SENTRY_API_TOKEN=${SENTRY_API_TOKEN}
-      - SENTRY_ORG=gracezero-ai
+      - SENTRY_ORG=${SENTRY_ORG}
       - SENTRY_DSN=${SENTRY_DSN}
-      - MONITOR_LOG_PATH=/opt/crew614/backups/monitor.log
-      - DAILY_REPORT_LOG_PATH=/opt/crew614/backups/daily-report.log
+      - MONITOR_LOG_PATH=/opt/app/backups/monitor.log
+      - DAILY_REPORT_LOG_PATH=/opt/app/backups/daily-report.log
     volumes:
-      - /opt/crew614/backups:/opt/crew614/backups:ro
-    networks:
-      - n8n_default
+      - /opt/app/backups:/opt/app/backups:ro
     logging:
       driver: json-file
       options:
@@ -32,11 +30,7 @@ services:
         max-file: "3"
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.hopperops.rule=Host(`hopperops.gracezero.ai`)"
+      - "traefik.http.routers.hopperops.rule=Host(`your-domain.example.com`)"
       - "traefik.http.routers.hopperops.tls=true"
       - "traefik.http.routers.hopperops.tls.certresolver=mytlschallenge"
       - "traefik.http.services.hopperops.loadbalancer.server.port=3616"
-
-networks:
-  n8n_default:
-    external: true

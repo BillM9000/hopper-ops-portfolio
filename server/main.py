@@ -71,7 +71,7 @@ app.add_middleware(SessionMiddleware, secret_key=SESSION_SECRET, max_age=7 * 24 
 # 5. CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "https://hopperops.gracezero.ai"],
+    allow_origins=["http://localhost:5173", "https://your-domain.example.com"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
