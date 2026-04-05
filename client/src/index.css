@@ -1,0 +1,51 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  body {
+    font-family: "Inter", system-ui, sans-serif;
+  }
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #2a2a3a;
+    border-radius: 3px;
+  }
+}
+
+@layer components {
+  .ho-card {
+    @apply bg-ho-card border border-ho-border rounded-lg p-4;
+  }
+  .ho-btn {
+    @apply px-3 py-1.5 rounded-md text-sm font-medium transition-colors;
+  }
+  .ho-btn-primary {
+    @apply ho-btn bg-ho-accent text-white hover:bg-ho-accent-light;
+  }
+  .ho-btn-ghost {
+    @apply ho-btn text-ho-muted hover:text-ho-text hover:bg-ho-card;
+  }
+  .ho-badge {
+    @apply inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold;
+  }
+  .ho-badge-red {
+    @apply ho-badge bg-red-500/20 text-red-400;
+  }
+  .ho-badge-yellow {
+    @apply ho-badge bg-yellow-500/20 text-yellow-400;
+  }
+  .ho-badge-green {
+    @apply ho-badge bg-green-500/20 text-green-400;
+  }
+}

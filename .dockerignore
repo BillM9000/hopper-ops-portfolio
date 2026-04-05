@@ -1,0 +1,12 @@
+node_modules
+.git
+.env
+__pycache__
+*.pyc
+.venv
+venv
+.auth
+mockup
+assets/full-1024.png
+tests
+.claude
