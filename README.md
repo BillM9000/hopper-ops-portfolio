@@ -1,52 +1,75 @@
 # Hopper Ops — Operational Intelligence Platform
 
-**Technology Risk Register | SBOM Management | Infrastructure Monitoring**
+**Technology Risk Register | SBOM Management | Infrastructure Monitoring | Market Intelligence**
 
-Hopper Ops is a purpose-built operational intelligence dashboard that serves as the single source of truth for GraceZero AI's infrastructure state, technology lifecycle management, and risk posture. It replaces scattered manual checks with a unified, automated system that runs 12 data collection modules, surfaces risks, and delivers a daily operational brief.
+Hopper Ops is a purpose-built operational intelligence dashboard that serves as the single source of truth for GraceZero AI's infrastructure state, technology lifecycle management, and risk posture. It replaces scattered manual checks with a unified, automated system that runs 24 data collection modules across two pipelines — a core operations pipeline and an AI-powered market intelligence pipeline — surfaces risks, and delivers a daily operational brief.
 
 Named for **Grace Hopper** — Navy rear admiral, computer science pioneer — and the concept of a hopper: a funnel that processes raw operational signals into refined, actionable intelligence.
+
+**Live:** [hopperops.gracezero.ai](https://hopperops.gracezero.ai) | **Public Repo:** [github.com/BillM9000/hopper-ops-portfolio](https://github.com/BillM9000/hopper-ops-portfolio)
+
+---
+
+## What It Does
+
+- **Technology risk register** — auto-scored risks across every app in the stack (EOL, security, deprecation, drift)
+- **SBOM (Software Bill of Materials)** — full inventory of every component with EOL countdown and daily diff
+- **Infrastructure monitoring** — single pane of glass: UptimeRobot uptime, Sentry errors, Docker container health, slow query tracking via `pg_stat_statements`
+- **Daily brief** — automated email every morning compiling status, incidents, Claude Code releases, model deprecations, and AI-summarized news; archives last 3 briefs with inline viewer and forward capability
+- **Market intelligence pipeline (Intelligence Lab)** — multi-source signal collection, deterministic scoring, LLM trend detection, and cross-stream opportunity synthesis
 
 ---
 
 ## Architecture
 
 ```
-                        ┌──────────────────────────────────────┐
-                        │          Hopper Ops                   │
-                        │    hopperops.gracezero.ai             │
-                        │                                       │
-   ┌──────────┐         │  ┌────────────┐   ┌──────────────┐  │
-   │ n8n Cron │────────▶│  │  Module    │──▶│  PostgreSQL  │  │
-   │ (6 AM)   │         │  │  Runner    │   │  (8 tables)  │  │
-   └──────────┘         │  │  (12 mods) │   └──────┬───────┘  │
-                        │  └────────────┘          │           │
-                        │         │                │           │
-                        │  ┌──────▼────────────────▼────────┐ │
-                        │  │   FastAPI API Layer             │ │
-                        │  │   /api/status, /risks, /sbom    │ │
-                        │  │   /monitoring, /brief, /feed    │ │
-                        │  └──────────────┬─────────────────┘ │
-                        │                 │                    │
-                        │  ┌──────────────▼─────────────────┐ │
-                        │  │   React Dashboard               │ │
-                        │  │   7 pages, dark theme            │ │
-                        │  └────────────────────────────────┘ │
-                        │                                       │
-                        │  ┌────────────────────────────────┐  │
-                        │  │   Outputs                       │  │
-                        │  │   → Daily email brief (6 AM)    │  │
-                        │  │   → CLAUDE.md webhook           │  │
-                        │  │   → PDF risk register export    │  │
-                        │  └────────────────────────────────┘  │
-                        └──────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────┐
+│                           Hopper Ops                                │
+│                    hopperops.gracezero.ai                           │
+│                                                                     │
+│   CORE PIPELINE                    INTELLIGENCE PIPELINE            │
+│   ─────────────                    ─────────────────────           │
+│   ┌──────────────┐                 ┌──────────────────┐            │
+│   │ Module Runner│                 │ 10 Collectors    │            │
+│   │ (12 modules) │                 │ HN, RSS, Reddit  │            │
+│   │ 7 determ.    │                 │ X, X Voices      │            │
+│   │ 5 LLM        │                 │ GitHub, Blogs    │            │
+│   └──────┬───────┘                 │ YouTube, Anth.   │            │
+│          │                         │ News             │            │
+│          │                         └──────┬───────────┘            │
+│          │                                │                         │
+│          │               ┌────────────────▼──────────┐             │
+│          │               │ 2 Analyzers (Claude Sonnet)│             │
+│          │               │ - Trend detector (2-pass)  │             │
+│          │               │ - Opportunity synthesizer  │             │
+│          │               └────────────────┬──────────┘             │
+│          │                                │                         │
+│   ┌──────▼────────────────────────────────▼────────────────────┐   │
+│   │                   PostgreSQL (15 tables)                    │   │
+│   └───────────────────────────┬────────────────────────────────┘   │
+│                               │                                     │
+│   ┌───────────────────────────▼────────────────────────────────┐   │
+│   │                 FastAPI API Layer (35+ endpoints)           │   │
+│   └───────────────────────────┬────────────────────────────────┘   │
+│                               │                                     │
+│   ┌───────────────────────────▼────────────────────────────────┐   │
+│   │              React Dashboard (9 pages)                      │   │
+│   │   Dashboard · Risk · SBOM · Actions · Feed · Monitoring     │   │
+│   │   History · Intelligence Lab · Login                        │   │
+│   └────────────────────────────────────────────────────────────┘   │
+│                                                                     │
+│   Outputs:  Daily email brief · Plain-text brief endpoint           │
+└─────────────────────────────────────────────────────────────────────┘
 
-  External Data Sources:
-  ├── Anthropic Status API (status.claude.com)
-  ├── GitHub Releases (claude-code atom feed)
-  ├── endoflife.date API (stack EOL tracking)
-  ├── UptimeRobot API (uptime + response times)
-  ├── Sentry API (error tracking + issue counts)
-  └── Claude API (Haiku 4.5 for editorial modules)
+External Sources:
+├── Anthropic Status API (status.claude.com)
+├── GitHub Releases (claude-code atom feed)
+├── endoflife.date API (stack EOL tracking)
+├── UptimeRobot API (uptime + response times)
+├── Sentry API (error tracking + issue counts)
+├── Hacker News, Reddit, X, GitHub Trending, AI Lab Blogs, RSS
+├── YouTube (channel RSS), Google News RSS
+└── Claude API (Haiku 4.5 — editorial; Sonnet 4.6 — Intel analyzers)
 ```
 
 ### Stack
@@ -55,17 +78,139 @@ Named for **Grace Hopper** — Navy rear admiral, computer science pioneer — a
 |-------|-----------|
 | Backend | FastAPI (Python 3.12), asyncpg |
 | Frontend | React 18, TypeScript, Vite, Tailwind CSS |
-| Database | PostgreSQL 16 |
+| Database | PostgreSQL 16 (15 tables) |
 | Auth | Google OAuth 2.0 (single-admin) |
-| LLM | Anthropic Claude Haiku 4.5 (editorial modules) |
-| Infrastructure | Docker, Traefik (TLS), Ubuntu 24.04 LTS |
-| Monitoring | UptimeRobot, Sentry, custom health scripts |
+| LLM | Claude Haiku 4.5 (editorial modules) · Claude Sonnet 4.6 (Intel analyzers) |
+| Infrastructure | Docker, Traefik (TLS + Let's Encrypt), Ubuntu 24.04 LTS |
+| Monitoring | UptimeRobot, Sentry, custom health scripts, pg_stat_statements |
+
+---
+
+## Core Operations Pipeline (12 Modules)
+
+The core pipeline runs on schedule and on-demand, collecting and synthesizing operational data.
+
+### Deterministic Modules (7)
+
+| Module | Source | Output |
+|--------|--------|--------|
+| `system_status` | Anthropic Status API | Current platform health |
+| `incidents_recent` | Anthropic Status API | Incidents in last 7 days |
+| `claude_code_releases` | GitHub atom feed | Latest Claude Code versions |
+| `model_deprecations` | Anthropic changelog | Deprecation alerts |
+| `stack_eol_check` | endoflife.date API | EOL countdown per component |
+| `sbom_diff` | DB snapshot comparison | Component changes since last run |
+| `risk_scorer` | SBOM + Sentry + incidents | Auto-scored risk register |
+
+### LLM Editorial Modules (5, Claude Haiku 4.5)
+
+| Module | What It Generates |
+|--------|------------------|
+| `api_release_notes` | AI-summarized Anthropic API changes |
+| `app_release_notes` | AI-summarized Claude app updates |
+| `news_digest` | Curated AI/tech news digest |
+| `interesting_finds` | Noteworthy items across all signals |
+| `action_items_synthesis` | Prioritized action list from all module data |
+
+---
+
+## Intelligence Lab
+
+The Intelligence Lab is a three-stage market intelligence pipeline that answers: *"What should GraceZero pitch this week?"*
+
+### Pipeline: Collect → Analyze → Synthesize
+
+```
+┌─────────────┐     ┌───────────────────┐     ┌──────────────────┐
+│  10 Signal  │────▶│  Two-Pass Trend   │────▶│  Opportunity     │
+│  Collectors │     │  Detector         │     │  Synthesizer     │
+│             │     │  (Claude Sonnet)  │     │  (Claude Sonnet) │
+│  pain_point │     │                   │     │                  │
+│  ai_signal  │     │  Pass 1: cluster  │     │  Cross pain pts  │
+│  (labeled   │     │  pain points      │     │  with AI signals │
+│  at ingest) │     │                   │     │                  │
+│             │     │  Pass 2: cluster  │     │  Output: pitch   │
+│             │     │  AI signals       │     │  angle, market,  │
+│             │     │                   │     │  gap, effort,    │
+│             │     │                   │     │  build-vs-wait   │
+└─────────────┘     └───────────────────┘     └──────────────────┘
+```
+
+### Signal Collectors (10)
+
+| Collector | Source | Auto-Category |
+|-----------|--------|---------------|
+| `intel_hn` | Hacker News top + Show HN | mixed |
+| `intel_rss` | 10 curated AI/tech RSS feeds | ai_signal |
+| `intel_reddit` | 8 subreddits (SaaS, n8n, automation, etc.) | pain_point (keyword match) |
+| `intel_x` | X keyword search (5 terms) | mixed |
+| `intel_x_voices` | X accounts from voice registry | by voice tier |
+| `intel_github` | GitHub daily trending repos | ai_signal |
+| `intel_blogs` | AI lab blogs (Anthropic, OpenAI, Google, Meta, Mistral) | ai_signal |
+| `intel_youtube` | YouTube channel RSS from voice registry | ai_signal |
+| `intel_anthropic` | Platform notes + Claude app notes + anthropic.com/news | ai_signal |
+| `intel_news` | Google News RSS — mainstream AI headlines (last 24h) | ai_signal |
+
+### Scoring Algorithm (Deterministic, Not LLM)
+
+All trend scoring uses a deterministic algorithm — no LLM guessing. Both pain-point and AI-signal streams use the same formula.
+
+**Momentum (0–100)** — Is this trend real?
+
+```
+momentum = source_breadth(30) + engagement(30) + volume(20) + recency(20)
+```
+
+| Factor | Max | Formula |
+|--------|-----|---------|
+| Source breadth | 30 | `unique_sources × 5` (capped at 30) |
+| Engagement | 30 | `sum(capped_scores) / 10` — per-signal cap of 50 |
+| Volume | 20 | `signal_count × 2` (capped at 20) |
+| Recency | 20 | `20 - (avg_age_hours / 2.4)` — decays over 48h |
+
+**Noise (0–100)** — Is it hype or substance?
+
+```
+noise = low_engagement(35) + source_concentration(35) + title_similarity(30)
+```
+
+| Factor | Max | Formula |
+|--------|-----|---------|
+| Low engagement ratio | 35 | `(signals with <5 pts / total) × 35` |
+| Source concentration | 35 | `(max_from_one_source / total) × 35` |
+| Title similarity | 30 | `(duplicate_titles / total) × 30` — trigram matching |
+
+**Threshold:** `momentum ≥ 60 AND noise ≤ 50` → promoted to dashboard.
+
+### Voice Registry
+
+Tracked people organized by tier — controls what gets collected and how signals are categorized.
+
+| Tier | Purpose | Signal Category |
+|------|---------|----------------|
+| Visionary | Where AI is going | ai_signal |
+| Practitioner | What's working now | ai_signal |
+| Buyer | What problems exist | pain_point |
+
+Voices are managed via the Voices tab in the Intelligence Lab UI. Platforms: X, YouTube, Newsletter, Reddit. Soft-delete preserves historical signal links.
+
+### Reply Drafter
+
+Pain-point posts have a **Draft Reply** button. Claude generates a technically specific, non-salesy response — no GraceZero mention, no links — consistent with a "be the most helpful person in the thread" positioning strategy.
+
+### Intelligence Lab UI Tabs
+
+- **Pain Points** — high-momentum pain signals with momentum/noise scores and Draft Reply
+- **AI Signals** — emerging capability trends with source breadth and evidence
+- **Opportunities** — synthesized leads in a pipeline (Signal → Researched → Pitched → Won → Dismissed)
+- **Voices** — voice registry management
+- **Digest** — summary of top trends and active opportunities
 
 ---
 
 ## How We Operate — IT Service Management
 
-GraceZero AI follows industry-standard IT service management practices adapted for a lean engineering organization. This section documents our operational framework, tooling, and processes.
+GraceZero AI follows industry-standard IT service management practices adapted for a lean engineering organization.
 
 ### Frameworks & Standards
 
@@ -90,43 +235,43 @@ Every change to production follows a structured workflow. No cowboy deployments.
 │  (Planning) │     │  (Tracking) │     │  (GitHub)    │     │  (Docker)   │
 └─────────────┘     └─────────────┘     └──────────────┘     └─────────────┘
        │                  │                    │                     │
-  Requirements       Issue created        PR created            Automated
-  & design docs      with RFC,            with tests,           Docker build,
-  in Notion           priority,            type checks,          Traefik TLS,
-  workspace           labels,              lint, visual QA       health check
-                      project link                               verification
+  Requirements       Issue created        PR created            Docker build,
+  & design docs      with RFC,            with type checks,     Traefik TLS,
+  in Notion           priority,            lint, visual QA       health check
+  workspace           labels,                                    verification,
+                      project link                               image tag
+                                                                 policy enforced
 ```
 
 ### 1. Planning & Requirements (Notion)
 
-- Product requirements documented in Notion workspace
-- Architecture Decision Records (ADRs) for significant technical choices
-- Runbooks for operational procedures
-- Design specs with mockups before implementation begins
+- Product requirements and Architecture Decision Records documented in Notion
+- Runbooks for all operational procedures
+- Design specs before implementation begins
 
 ### 2. Issue Tracking & RFCs (Linear)
 
 - All work tracked in **Linear** (GraceZero team, project-based)
 - **RFC process** for non-trivial changes — document the what, why, alternatives considered, and implementation plan before writing code
 - Issue types: Feature, Bug, RFC, Chore, Security
-- Priority levels: Urgent, High, Normal, Low
-- Every commit references a Linear issue ID (e.g., `TOP-69`)
+- Every commit references a Linear issue ID
 
 ### 3. Development & Review (GitHub)
 
 - **Git flow**: Feature branches from master, PR-based review
 - **Automated checks**: TypeScript type checking, ESLint, Prettier
-- **Testing**: Playwright E2E (215+ tests), Vitest unit tests, visual QA
+- **Testing**: Playwright E2E smoke tests, Vitest unit tests, visual QA
 - **Commit conventions**: Conventional Commits (`feat:`, `fix:`, `refactor:`, `docs:`)
-- **Changelog**: Every code change logged in CHANGELOG.md in the same commit
+- **Changelog**: Every code change logged in `CHANGELOG.md` in the same commit
 
 ### 4. Deployment (Docker + Traefik)
 
 - **Containerized**: All applications run in Docker containers
 - **Reverse proxy**: Traefik handles TLS termination, routing, and Let's Encrypt certificates
 - **Zero-downtime**: Container recreation with `docker compose up -d`
-- **Environment isolation**: Separate containers for production and QA
-- **Golden backups**: Database snapshots taken before every major change
+- **Image tag policy**: Every deploy produces exactly two tags — `:latest` (mutable pointer) and `:<git-sha>` (immutable rollback artifact). No slug tags. Previous sha tag retained for one cycle as the rollback target.
+- **Health verification**: Deploy only considered complete after `/api/health` returns 200
+- **Environment isolation**: `.env` preserved across deploys; never overwritten by build process
 
 ---
 
@@ -146,10 +291,12 @@ Every change to production follows a structured workflow. No cowboy deployments.
 - 20% trace sampling, 100% replay on error
 - Error grouping, assignment, and resolution tracking
 - Real-time alerting on new error types
+- Per-environment filtering (`SENTRY_ALLOWED_ENVIRONMENTS`) — dev/local noise excluded from ops dashboard
+- Dismissal system: individual issues can be hidden from Hopper Ops display without touching Sentry history
 
 ### Layer 3 — Infrastructure Health (Custom Scripts)
 
-10-check infrastructure monitor running every 15 minutes:
+10-check infrastructure monitor running every 15 minutes via cron, emailing alerts on threshold breach:
 
 | Check | Threshold | Alert Condition |
 |-------|-----------|-----------------|
@@ -159,7 +306,7 @@ Every change to production follows a structured workflow. No cowboy deployments.
 | Backup size anomaly | 50% variance | Data corruption indicator |
 | Container status | Any down | Service outage |
 | Container restarts | Any restart | Stability issue |
-| Memory usage | 256MB per container | Memory leak |
+| Memory usage | 512MB per container | Memory leak |
 | Session count | 10,000 | Session store bloat |
 | Error rate | 10/hour | Application health |
 | Auth failures | 50/hour | Brute force attempt |
@@ -169,10 +316,13 @@ Every change to production follows a structured workflow. No cowboy deployments.
 The dashboard itself — aggregating all monitoring data into a single view:
 
 - **Anthropic platform status** — real-time from status.claude.com
-- **Dependency lifecycle tracking** — EOL dates for every component in the stack
+- **Sentry integration** — unresolved issues with first/last seen, occurrence counts, direct Sentry links; dismissed issues tracked separately
+- **Docker container metrics** — CPU, memory, network I/O, restart count, uptime per container
+- **Slow query tracking** — top queries by execution time via `pg_stat_statements`
+- **Dependency lifecycle** — EOL dates for every component in the stack
 - **Risk register** — categorized, prioritized, with status tracking
-- **SBOM (Software Bill of Materials)** — complete inventory of all dependencies
-- **Daily brief** — automated summary emailed at 6 AM
+- **SBOM** — complete inventory with daily diffs
+- **Daily brief** — automated summary with rolling archive (last 3 briefs), inline HTML viewer, and forward capability
 
 ---
 
@@ -182,11 +332,11 @@ The dashboard itself — aggregating all monitoring data into a single view:
 
 | Control | Implementation |
 |---------|---------------|
-| Authentication | Google OAuth 2.0 with PKCE |
+| Authentication | Google OAuth 2.0 |
 | Session management | Server-side sessions, 7-day expiry, secure cookies |
 | CSRF protection | Double-submit cookie pattern (XSRF-TOKEN) |
 | Rate limiting | Auth: 20 req/15 min, API: 100 req/min |
-| Input validation | Zod schemas (TypeScript), Pydantic models (Python) |
+| Input validation | Pydantic models (Python), TypeScript strict mode |
 | SQL injection | Parameterized queries only (`$1, $2, $3`) |
 | XSS prevention | CSP headers, output escaping |
 | Secrets management | Environment variables, never in code or git |
@@ -198,9 +348,8 @@ The dashboard itself — aggregating all monitoring data into a single view:
 | TLS/SSL | Let's Encrypt via Traefik, auto-renewal |
 | SSH | Key-only authentication, no password auth |
 | Firewall | UFW active, allow 22/80/443 only |
-| Container isolation | Non-root users, read-only mounts where possible |
 | Dependency scanning | SBOM tracked in Hopper Ops, EOL alerts automated |
-| Backup encryption | Daily automated backups, rolling 10-day retention |
+| Backup | Daily automated pg_dump, rolling 10-snapshot retention |
 | Fail2ban | Active, banning repeated SSH failures |
 
 ### Incident Response
@@ -219,7 +368,7 @@ The dashboard itself — aggregating all monitoring data into a single view:
 
 | Category | Description | Example |
 |----------|-------------|---------|
-| **EOL** | Component approaching end-of-life | Node.js 20 → 22 upgrade (completed) |
+| **EOL** | Component approaching end-of-life | Node.js 20 → 22 upgrade |
 | **Security** | Vulnerability or exposure | Flask agents bound to 0.0.0.0 (remediated) |
 | **Deprecation** | API/model being sunset | Pinned model strings needing update |
 | **Drift** | Configuration divergence | Unaudited model strings in agent code |
@@ -245,34 +394,28 @@ Hopper Ops maintains a complete SBOM covering:
 - **Model strings**: AI model identifiers with deprecation tracking
 - **Data sources**: endoflife.date API for automated EOL checking
 
-Each component is tracked with:
-- Current version
-- EOL date (from endoflife.date or manual entry)
-- Days remaining until EOL
-- Risk level (red/yellow/green)
-- Which project uses it
-- Last verified date
+Each component is tracked with current version, EOL date, days remaining, risk level, which project uses it, and last-verified date.
 
 ---
 
 ## Daily Operations Brief
 
-Every morning at 6:00 AM CST, an automated workflow:
+Every morning, an automated n8n workflow:
 
-1. **Triggers** all 12 data collection modules
-2. **Aggregates** results into a compiled brief
-3. **Emails** the summary to the operations team
-4. **Surfaces** critical items that need immediate attention
+1. Triggers all 12 core data collection modules
+2. Aggregates results into a compiled brief
+3. Emails the summary to the operations team
+4. Stores a snapshot in the brief archive (rolling last 3)
 
 Brief sections:
-- Anthropic platform status
-- Recent incidents (last 7 days)
-- Claude Code releases
-- Model deprecation alerts
-- Stack health (EOL countdown)
+- Anthropic platform status + recent incidents
+- Claude Code releases + model deprecation alerts
+- Stack health (EOL countdown per component)
 - API and app release notes (AI-summarized)
 - Industry news digest (AI-curated)
 - Prioritized action items
+
+**Brief archives:** Last 3 briefs are retained in the database with inline HTML viewer and one-click forward to any email address.
 
 ---
 
@@ -292,9 +435,9 @@ Brief sections:
 
 1. Hopper Ops flagged Node.js 20 EOL (April 30, 2026) — 26 days remaining
 2. Risk item auto-created in risk register (red, critical)
-3. RFC created in Linear (TOP-61) with upgrade plan
+3. RFC created in Linear with upgrade plan
 4. Dockerfiles updated, tested on QA environment
-5. Full Playwright suite (217 tests) passed on QA
+5. Full Playwright suite passed on QA
 6. Deployed to production, 24-hour soak period monitored
 7. Risk item resolved, SBOM updated to Node.js 22
 
@@ -311,10 +454,13 @@ At-a-glance view: Anthropic platform status, risk summary, open action items, mo
 Complete software inventory with versions, EOL dates, days remaining, risk badges, and project assignments.
 
 ### Monitoring
-Single pane of glass: UptimeRobot uptime/response times, Sentry error tracking, and VPS health checks — all in one view.
+Single pane of glass: UptimeRobot uptime/response times, Sentry error tracking, Docker container metrics, and slow query stats.
 
 ### Risk Register
 Sortable, filterable risk table with inline status management. Color-coded by severity.
+
+### Intelligence Lab
+Multi-tab market intelligence view: Pain Points with momentum/noise scores, AI Signals, Opportunity pipeline, Voice registry, and Digest.
 
 ---
 
@@ -322,4 +468,4 @@ Sortable, filterable risk table with inline status management. Color-coded by se
 
 **GraceZero AI** — Engineering operations powered by Claude
 
-Built with FastAPI, React, PostgreSQL, and Claude Haiku 4.5.
+Built with FastAPI, React, PostgreSQL, and Claude (Haiku 4.5 + Sonnet 4.6).
