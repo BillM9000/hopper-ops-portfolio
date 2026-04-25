@@ -2,7 +2,7 @@
 
 **Technology Risk Register | SBOM Management | Infrastructure Monitoring | Market Intelligence**
 
-Hopper Ops is a purpose-built operational intelligence dashboard that serves as the single source of truth for GraceZero AI's infrastructure state, technology lifecycle management, and risk posture. It replaces scattered manual checks with a unified, automated system that runs 24 data collection modules across two pipelines — a core operations pipeline and an AI-powered market intelligence pipeline — surfaces risks, and delivers a daily operational brief.
+Hopper Ops is a purpose-built operational intelligence dashboard that serves as the single source of truth for GraceZero AI's infrastructure state, technology lifecycle management, and risk posture. It replaces scattered manual checks with a unified, automated system that runs **26 data collection modules across two pipelines** — a 14-module core operations pipeline and a 12-module AI-powered market intelligence pipeline — surfaces risks, and delivers a daily operational brief.
 
 Named for **Grace Hopper** — Navy rear admiral, computer science pioneer — and the concept of a hopper: a funnel that processes raw operational signals into refined, actionable intelligence.
 
@@ -13,10 +13,40 @@ Named for **Grace Hopper** — Navy rear admiral, computer science pioneer — a
 ## What It Does
 
 - **Technology risk register** — auto-scored risks across every app in the stack (EOL, security, deprecation, drift)
-- **SBOM (Software Bill of Materials)** — full inventory of every component with EOL countdown and daily diff
-- **Infrastructure monitoring** — single pane of glass: UptimeRobot uptime, Sentry errors, Docker container health, slow query tracking via `pg_stat_statements`
-- **Daily brief** — automated email every morning compiling status, incidents, Claude Code releases, model deprecations, and AI-summarized news; archives last 3 briefs with inline viewer and forward capability
-- **Market intelligence pipeline (Intelligence Lab)** — multi-source signal collection, deterministic scoring, LLM trend detection, and cross-stream opportunity synthesis
+- **SBOM (Software Bill of Materials)** — full component inventory with EOL countdown, daily diff, and a cross-project scanner that walks every codebase looking for pinned AI model strings
+- **Infrastructure monitoring** — single pane of glass: UptimeRobot uptime, Sentry errors with environment-aware filtering, Docker container health, slow-query tracking via `pg_stat_statements`
+- **Daily brief** — automated email every morning compiling status, incidents, Claude Code releases, model deprecations, and AI-summarized news; archives last 3 briefs with inline viewer and one-click forward
+- **Market intelligence pipeline (Intelligence Lab)** — multi-source signal collection across 10 sources, deterministic scoring, two-pass LLM trend detection, and adversarial cross-stream opportunity synthesis
+
+---
+
+## What's Not in the Average Operations Dashboard
+
+Most ops dashboards are uptime monitors, log aggregators, or APM tools. Hopper Ops is none of them. Six things make it unusual:
+
+### 1. AI model deprecations tracked as supply-chain components
+
+Most teams hardcode `claude-3-5-sonnet-20241022` somewhere in a config and find out it's deprecated when production breaks. In Hopper Ops, model strings are first-class SBOM components with countdown timers. A **cross-project scanner** walks every codebase under `~/GraceZero.ai.local/` looking for pinned model IDs and flags them in the risk register before the deprecation deadline.
+
+### 2. Adversarial AI synthesis — the LLM has to argue against itself
+
+Every opportunity the Intelligence Lab generates has a forced `why_this_might_not_work` field. The synthesizer cannot publish a recommendation without first articulating the case against it. This cuts AI optimism bias substantially — opportunities that survive the falsification step are the ones worth pursuing.
+
+### 3. ICP disqualifications baked into the synthesis prompt
+
+The opportunity synthesizer runs against an explicit "WHAT WE WILL NOT PURSUE" block in the prompt. It cannot propose pitching anything HubSpot, Zapier, GoHighLevel, Make.com, or Salesforce already ships at <$200/mo. It cannot propose ideas requiring sales channels we don't have. The discipline that's normally a human gate is encoded into the model's instructions.
+
+### 4. Two pipelines, one platform
+
+Operational monitoring AND market intelligence on the same dashboard, same database, same auth. Either is a product on its own. Together they're a posture: monitor what's running, watch what the market wants next, surface both in a single morning brief.
+
+### 5. 80-phrase pain classifier across all 10 collectors
+
+Most "social listening" tools detect complaints on Reddit only. The Hopper Ops pain classifier scans every collected signal — HN comments, X complaint queries, blog posts, GitHub issues, RSS, news — against an **80-phrase taxonomy** organized into 8 categories (time/cost quantifiers, frustration language, workaround patterns, reliability failures, pricing complaints, capacity pain, switching language, gap-naming). Two distinct matches promote the signal to `pain_point`. One-off mentions are ignored.
+
+### 6. Persistence-aware trend detection (not churn-aware)
+
+Trends carry a `title_key` (normalized hash) and a `(first_seen, last_seen, observation_count)` window. Re-detecting a trend the next day adds **+3 momentum** (capped at +12) — sustained signals get heavier. Archived trends don't block re-detection because the unique constraint is partial: `WHERE status='active'`. Most "trending" systems just refresh and lose continuity. This one accumulates evidence over time.
 
 ---
 
@@ -28,35 +58,35 @@ Named for **Grace Hopper** — Navy rear admiral, computer science pioneer — a
 │                    hopperops.gracezero.ai                           │
 │                                                                     │
 │   CORE PIPELINE                    INTELLIGENCE PIPELINE            │
-│   ─────────────                    ─────────────────────           │
-│   ┌──────────────┐                 ┌──────────────────┐            │
-│   │ Module Runner│                 │ 10 Collectors    │            │
-│   │ (12 modules) │                 │ HN, RSS, Reddit  │            │
-│   │ 7 determ.    │                 │ X, X Voices      │            │
-│   │ 5 LLM        │                 │ GitHub, Blogs    │            │
-│   └──────┬───────┘                 │ YouTube, Anth.   │            │
-│          │                         │ News             │            │
-│          │                         └──────┬───────────┘            │
+│   ─────────────                    ─────────────────────            │
+│   ┌──────────────┐                 ┌──────────────────┐             │
+│   │ Module Runner│                 │ 10 Collectors    │             │
+│   │ (14 modules) │                 │ HN, RSS, Reddit  │             │
+│   │ 9 determ.    │                 │ X, X Voices      │             │
+│   │ 5 LLM        │                 │ GitHub, Blogs    │             │
+│   └──────┬───────┘                 │ YouTube, Anth.   │             │
+│          │                         │ News             │             │
+│          │                         └──────┬───────────┘             │
 │          │                                │                         │
-│          │               ┌────────────────▼──────────┐             │
-│          │               │ 2 Analyzers (Claude Sonnet)│             │
-│          │               │ - Trend detector (2-pass)  │             │
-│          │               │ - Opportunity synthesizer  │             │
-│          │               └────────────────┬──────────┘             │
+│          │               ┌────────────────▼──────────────┐          │
+│          │               │ 2 Analyzers                   │          │
+│          │               │ - Trend detector (Sonnet 4.6) │          │
+│          │               │ - Opportunity synth (Opus 4.7)│          │
+│          │               └────────────────┬──────────────┘          │
 │          │                                │                         │
-│   ┌──────▼────────────────────────────────▼────────────────────┐   │
-│   │                   PostgreSQL (15 tables)                    │   │
-│   └───────────────────────────┬────────────────────────────────┘   │
+│   ┌──────▼────────────────────────────────▼────────────────────┐    │
+│   │                   PostgreSQL (15 tables)                   │    │
+│   └───────────────────────────┬────────────────────────────────┘    │
 │                               │                                     │
-│   ┌───────────────────────────▼────────────────────────────────┐   │
-│   │                 FastAPI API Layer (35+ endpoints)           │   │
-│   └───────────────────────────┬────────────────────────────────┘   │
+│   ┌───────────────────────────▼────────────────────────────────┐    │
+│   │                 FastAPI API Layer (35+ endpoints)          │    │
+│   └───────────────────────────┬────────────────────────────────┘    │
 │                               │                                     │
-│   ┌───────────────────────────▼────────────────────────────────┐   │
-│   │              React Dashboard (9 pages)                      │   │
-│   │   Dashboard · Risk · SBOM · Actions · Feed · Monitoring     │   │
-│   │   History · Intelligence Lab · Login                        │   │
-│   └────────────────────────────────────────────────────────────┘   │
+│   ┌───────────────────────────▼────────────────────────────────┐    │
+│   │              React Dashboard (9 pages)                     │    │
+│   │   Dashboard · Risk · SBOM · Actions · Feed · Monitoring    │    │
+│   │   History · Intelligence Lab · Login                       │    │
+│   └────────────────────────────────────────────────────────────┘    │
 │                                                                     │
 │   Outputs:  Daily email brief · Plain-text brief endpoint           │
 └─────────────────────────────────────────────────────────────────────┘
@@ -65,11 +95,13 @@ External Sources:
 ├── Anthropic Status API (status.claude.com)
 ├── GitHub Releases (claude-code atom feed)
 ├── endoflife.date API (stack EOL tracking)
+├── n8n GitHub releases (version drift tracking)
 ├── UptimeRobot API (uptime + response times)
-├── Sentry API (error tracking + issue counts)
-├── Hacker News, Reddit, X, GitHub Trending, AI Lab Blogs, RSS
+├── Sentry API (error tracking + issue counts, environment-filtered)
+├── Hacker News (top + Show HN + Ask HN + comment sweeping)
+├── Reddit, X, GitHub Trending, AI Lab Blogs, RSS
 ├── YouTube (channel RSS), Google News RSS
-└── Claude API (Haiku 4.5 — editorial; Sonnet 4.6 — Intel analyzers)
+└── Claude API (Haiku 4.5 — editorial; Sonnet 4.6 — Intel trends; Opus 4.7 — Intel synthesis)
 ```
 
 ### Stack
@@ -80,26 +112,28 @@ External Sources:
 | Frontend | React 18, TypeScript, Vite, Tailwind CSS |
 | Database | PostgreSQL 16 (15 tables) |
 | Auth | Google OAuth 2.0 (single-admin) |
-| LLM | Claude Haiku 4.5 (editorial modules) · Claude Sonnet 4.6 (Intel analyzers) |
+| LLM | Claude Haiku 4.5 (editorial) · Claude Sonnet 4.6 (Intel trend detector) · **Claude Opus 4.7 (Intel synthesis — reasoning premium justified for high-stakes cross-stream output)** |
 | Infrastructure | Docker, Traefik (TLS + Let's Encrypt), Ubuntu 24.04 LTS |
 | Monitoring | UptimeRobot, Sentry, custom health scripts, pg_stat_statements |
 
 ---
 
-## Core Operations Pipeline (12 Modules)
+## Core Operations Pipeline (14 Modules)
 
 The core pipeline runs on schedule and on-demand, collecting and synthesizing operational data.
 
-### Deterministic Modules (7)
+### Deterministic Modules (9)
 
 | Module | Source | Output |
 |--------|--------|--------|
 | `system_status` | Anthropic Status API | Current platform health |
 | `incidents_recent` | Anthropic Status API | Incidents in last 7 days |
 | `claude_code_releases` | GitHub atom feed | Latest Claude Code versions |
-| `model_deprecations` | Anthropic changelog | Deprecation alerts |
+| `model_deprecations` | Anthropic changelog | Deprecation alerts with countdown |
 | `stack_eol_check` | endoflife.date API | EOL countdown per component |
+| `n8n_version_check` | n8n GitHub releases | n8n version drift + risk reasoning |
 | `sbom_diff` | DB snapshot comparison | Component changes since last run |
+| `sentry_issues` | Sentry API (env-filtered) | Unresolved issues, dismissal-aware |
 | `risk_scorer` | SBOM + Sentry + incidents | Auto-scored risk register |
 
 ### LLM Editorial Modules (5, Claude Haiku 4.5)
@@ -124,36 +158,55 @@ The Intelligence Lab is a three-stage market intelligence pipeline that answers:
 ┌─────────────┐     ┌───────────────────┐     ┌──────────────────┐
 │  10 Signal  │────▶│  Two-Pass Trend   │────▶│  Opportunity     │
 │  Collectors │     │  Detector         │     │  Synthesizer     │
-│             │     │  (Claude Sonnet)  │     │  (Claude Sonnet) │
+│             │     │  (Claude Sonnet)  │     │  (Claude Opus)   │
 │  pain_point │     │                   │     │                  │
 │  ai_signal  │     │  Pass 1: cluster  │     │  Cross pain pts  │
 │  (labeled   │     │  pain points      │     │  with AI signals │
-│  at ingest) │     │                   │     │                  │
-│             │     │  Pass 2: cluster  │     │  Output: pitch   │
-│             │     │  AI signals       │     │  angle, market,  │
-│             │     │                   │     │  gap, effort,    │
-│             │     │                   │     │  build-vs-wait   │
+│  at ingest  │     │                   │     │                  │
+│  by 80-phr. │     │  Pass 2: cluster  │     │  Output: pitch   │
+│  classifier)│     │  AI signals       │     │  angle, market,  │
+│             │     │                   │     │  gap, evidence   │
+│             │     │  Persistence-     │     │  quotes, "why    │
+│             │     │  aware: re-detect │     │  this might not  │
+│             │     │  bonus +3 (cap 12)│     │  work" field     │
 └─────────────┘     └───────────────────┘     └──────────────────┘
 ```
 
 ### Signal Collectors (10)
 
-| Collector | Source | Auto-Category |
-|-----------|--------|---------------|
-| `intel_hn` | Hacker News top + Show HN | mixed |
-| `intel_rss` | 10 curated AI/tech RSS feeds | ai_signal |
-| `intel_reddit` | 8 subreddits (SaaS, n8n, automation, etc.) | pain_point (keyword match) |
-| `intel_x` | X keyword search (5 terms) | mixed |
+| Collector | Source | Auto-Category Logic |
+|-----------|--------|---------------------|
+| `intel_hn` | Hacker News top + Show HN + Ask HN + comment sweeping on Ask-HN and pain-flagged stories | pain_point (Ask-HN parentage or 80-phrase classifier match) |
+| `intel_rss` | 10 curated AI/tech RSS feeds | pain_point (classifier) / ai_signal (default) |
+| `intel_reddit` | **11 subreddits** — SaaS, n8n, automation, smallbusiness, devops, Entrepreneur, microsaas, nocode, SideProject, sweatystartup, EntrepreneurRideAlong | pain_point (buyer subs + classifier) |
+| `intel_x` | X keyword search — **5 product-category terms + 6 complaint queries** ("sick of Zapier", "Make.com is broken", etc.) | pain_point (complaint queries pre-tagged + classifier on body) |
 | `intel_x_voices` | X accounts from voice registry | by voice tier |
-| `intel_github` | GitHub daily trending repos | ai_signal |
-| `intel_blogs` | AI lab blogs (Anthropic, OpenAI, Google, Meta, Mistral) | ai_signal |
-| `intel_youtube` | YouTube channel RSS from voice registry | ai_signal |
-| `intel_anthropic` | Platform notes + Claude app notes + anthropic.com/news | ai_signal |
-| `intel_news` | Google News RSS — mainstream AI headlines (last 24h) | ai_signal |
+| `intel_github` | GitHub daily trending repos | pain_point (classifier) / ai_signal (default) |
+| `intel_blogs` | AI lab blogs (Anthropic, OpenAI, Google, Meta, Mistral) | pain_point (classifier) / ai_signal (default) |
+| `intel_youtube` | YouTube channel RSS from voice registry | pain_point (classifier) / ai_signal (default) |
+| `intel_anthropic` | Platform notes + Claude app notes + anthropic.com/news | pain_point (classifier) / ai_signal (default) |
+| `intel_news` | Google News RSS — mainstream AI headlines (last 24h) | pain_point (classifier) / ai_signal (default) |
 
-### Scoring Algorithm (Deterministic, Not LLM)
+### Pain Classifier (80 phrases, 8 categories, all 10 sources)
 
-All trend scoring uses a deterministic algorithm — no LLM guessing. Both pain-point and AI-signal streams use the same formula.
+A shared classifier — `pain_classifier.py` — scans every collected signal's title and body against an 80-phrase taxonomy. **Two distinct matches** promote the signal to `pain_point`. Categories:
+
+| Category | Sample phrases |
+|----------|----------------|
+| Help-seeking | "need help with", "looking for someone", "anyone built" |
+| Time/cost quantifiers | "wasting hours", "hours per week", "full day lost" |
+| Frustration / emotional | "sick of", "fed up with", "drives me crazy" |
+| Workaround language | "manual process", "spreadsheet hell", "stuck doing" |
+| Reliability failures | "flaky", "keeps breaking", "silently fails" |
+| Pricing complaints | "too expensive", "ripoff", "killing my margin" |
+| Capacity / scale | "can't scale", "rate limited", "doesn't handle" |
+| Switching / gap-naming | "moving off", "wish there was", "the problem with" |
+
+The two-match threshold prevents single stray mentions in AI-focused content from triggering false positives.
+
+### Trend Scoring (Deterministic, Stream-Aware)
+
+All trend scoring uses a deterministic algorithm — no LLM guessing.
 
 **Momentum (0–100)** — Is this trend real?
 
@@ -163,10 +216,10 @@ momentum = source_breadth(30) + engagement(30) + volume(20) + recency(20)
 
 | Factor | Max | Formula |
 |--------|-----|---------|
-| Source breadth | 30 | `unique_sources × 5` (capped at 30) |
-| Engagement | 30 | `sum(capped_scores) / 10` — per-signal cap of 50 |
+| Source breadth | 30 | `unique_sources × 5` (capped at 30) — pain_point stream counts distinct subreddits as distinct channels |
+| Engagement | 30 | `sum(capped_scores) / 10` × 1.5 multiplier on pain_point stream (complaints under-engage) |
 | Volume | 20 | `signal_count × 2` (capped at 20) |
-| Recency | 20 | `20 - (avg_age_hours / 2.4)` — decays over 48h |
+| Recency | 20 | `20 - (avg_age_hours / 3.0)` — softer decay over 48h window |
 
 **Noise (0–100)** — Is it hype or substance?
 
@@ -180,7 +233,23 @@ noise = low_engagement(35) + source_concentration(35) + title_similarity(30)
 | Source concentration | 35 | `(max_from_one_source / total) × 35` |
 | Title similarity | 30 | `(duplicate_titles / total) × 30` — trigram matching |
 
+**Persistence bonus:** trends re-detected on subsequent runs accumulate `+3` momentum per re-detection, capped at `+12`. Sustained signals beat one-day spikes.
+
 **Threshold:** `momentum ≥ 60 AND noise ≤ 50` → promoted to dashboard.
+
+### Opportunity Synthesizer (Claude Opus 4.7)
+
+The synthesizer takes the day's pain trends + AI-signal trends and produces opportunities — actionable pitches with structured fields:
+
+- **Pitch angle** — what to sell, in one sentence
+- **Target market** — who would buy this
+- **Gap** — why this isn't already solved by an incumbent
+- **Effort estimate** — buildable in days/weeks/months under GraceZero's ICP rules
+- **Build-vs-wait** — ship now or wait for more signal
+- **Evidence quotes (JSONB)** — grounded source quotes with URLs the LLM had to cite
+- **Why this might not work** — adversarial falsification field; the synthesizer must argue against the recommendation before publishing it
+
+The synthesis prompt has an explicit ICP disqualification block — opportunities are auto-rejected if a competitor already ships the same feature at <$200/mo, if it requires sales channels GraceZero doesn't have, if it needs capabilities GraceZero hasn't shipped before, or if the buyer can solve it with a $20 ChatGPT subscription plus 30 minutes of setup.
 
 ### Voice Registry
 
@@ -262,6 +331,7 @@ Every change to production follows a structured workflow. No cowboy deployments.
 - **Automated checks**: TypeScript type checking, ESLint, Prettier
 - **Testing**: Playwright E2E smoke tests, Vitest unit tests, visual QA
 - **Commit conventions**: Conventional Commits (`feat:`, `fix:`, `refactor:`, `docs:`)
+- **Memory drift guard**: pre-commit hook blocks commits when in-repo memory and Claude-Code-managed memory disagree
 - **Changelog**: Every code change logged in `CHANGELOG.md` in the same commit
 
 ### 4. Deployment (Docker + Traefik)
@@ -291,8 +361,8 @@ Every change to production follows a structured workflow. No cowboy deployments.
 - 20% trace sampling, 100% replay on error
 - Error grouping, assignment, and resolution tracking
 - Real-time alerting on new error types
-- Per-environment filtering (`SENTRY_ALLOWED_ENVIRONMENTS`) — dev/local noise excluded from ops dashboard
-- Dismissal system: individual issues can be hidden from Hopper Ops display without touching Sentry history
+- **Per-environment filtering** (`SENTRY_ALLOWED_ENVIRONMENTS`) — dev/local noise excluded from ops dashboard at query time, never mutated in Sentry
+- **Dismissal system**: individual issues can be hidden from Hopper Ops display without touching Sentry history
 
 ### Layer 3 — Infrastructure Health (Custom Scripts)
 
@@ -320,8 +390,9 @@ The dashboard itself — aggregating all monitoring data into a single view:
 - **Docker container metrics** — CPU, memory, network I/O, restart count, uptime per container
 - **Slow query tracking** — top queries by execution time via `pg_stat_statements`
 - **Dependency lifecycle** — EOL dates for every component in the stack
+- **AI model deprecation tracking** — pinned model strings as supply-chain components with countdown timers
 - **Risk register** — categorized, prioritized, with status tracking
-- **SBOM** — complete inventory with daily diffs
+- **SBOM** — complete inventory with daily diffs and cross-project model-string scanner
 - **Daily brief** — automated summary with rolling archive (last 3 briefs), inline HTML viewer, and forward capability
 
 ---
@@ -391,18 +462,20 @@ Hopper Ops maintains a complete SBOM covering:
 - **Infrastructure**: OS, database, runtime, proxy, container engine
 - **SDKs**: Anthropic client libraries (npm + pip)
 - **Services**: All deployed applications and their versions
-- **Model strings**: AI model identifiers with deprecation tracking
-- **Data sources**: endoflife.date API for automated EOL checking
+- **AI model strings**: model identifiers tracked as supply-chain components with deprecation deadlines
+- **Data sources**: endoflife.date API for automated EOL checking; n8n GitHub releases for n8n version drift
 
-Each component is tracked with current version, EOL date, days remaining, risk level, which project uses it, and last-verified date.
+Each component is tracked with current version, target version (when an upgrade is needed), risk reasoning, EOL date, days remaining, risk level, which project uses it, and last-verified date.
+
+**Cross-project Claude model scanner** — walks every codebase under `~/GraceZero.ai.local/` looking for pinned model IDs (`claude-3-5-sonnet-20241022`, `claude-haiku-4-5-20251001`, etc.) and surfaces drift between code and SBOM. Catches the model string a developer pinned 6 months ago and forgot about.
 
 ---
 
 ## Daily Operations Brief
 
-Every morning, an automated n8n workflow:
+Every morning, an automated workflow:
 
-1. Triggers all 12 core data collection modules
+1. Triggers all 14 core data collection modules
 2. Aggregates results into a compiled brief
 3. Emails the summary to the operations team
 4. Stores a snapshot in the brief archive (rolling last 3)
@@ -413,7 +486,7 @@ Brief sections:
 - Stack health (EOL countdown per component)
 - API and app release notes (AI-summarized)
 - Industry news digest (AI-curated)
-- Prioritized action items
+- Prioritized action items (synthesized from all module data)
 
 **Brief archives:** Last 3 briefs are retained in the database with inline HTML viewer and one-click forward to any email address.
 
@@ -451,16 +524,16 @@ Total time from detection to resolution: **1 business day**
 At-a-glance view: Anthropic platform status, risk summary, open action items, module health, and recent updates.
 
 ### SBOM
-Complete software inventory with versions, EOL dates, days remaining, risk badges, and project assignments.
+Complete software inventory with versions, target versions, risk reasoning, EOL dates, days remaining, risk badges, and project assignments.
 
 ### Monitoring
-Single pane of glass: UptimeRobot uptime/response times, Sentry error tracking, Docker container metrics, and slow query stats.
+Single pane of glass: UptimeRobot uptime/response times, Sentry error tracking with environment filtering, Docker container metrics, and slow query stats.
 
 ### Risk Register
 Sortable, filterable risk table with inline status management. Color-coded by severity.
 
 ### Intelligence Lab
-Multi-tab market intelligence view: Pain Points with momentum/noise scores, AI Signals, Opportunity pipeline, Voice registry, and Digest.
+Multi-tab market intelligence view: Pain Points with momentum/noise scores, AI Signals, Opportunity pipeline (with adversarial falsification + evidence quotes), Voice registry, and Digest.
 
 ---
 
@@ -468,4 +541,4 @@ Multi-tab market intelligence view: Pain Points with momentum/noise scores, AI S
 
 **GraceZero AI** — Engineering operations powered by Claude
 
-Built with FastAPI, React, PostgreSQL, and Claude (Haiku 4.5 + Sonnet 4.6).
+Built with FastAPI, React, PostgreSQL, and Claude (Haiku 4.5 + Sonnet 4.6 + Opus 4.7).
